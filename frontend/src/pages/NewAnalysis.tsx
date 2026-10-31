@@ -11,13 +11,13 @@ import './NewAnalysis.css';
 function NewAnalysis({ hideNavbar = false }: { hideNavbar?: boolean }) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [formData, setFormData] = useState({ companyName: '', cin: '', gstin: '', pan: '', amount: '' });
   const [files, setFiles] = useState({ balanceSheet: null as File | null, bankStatements: null as File | null, gstFilings: null as File | null });
   const [uploadPct, setUploadPct] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  
+
   // Persistence States
   const [isFetching, setIsFetching] = useState(true);
   const [lastFilledTime, setLastFilledTime] = useState<string | null>(null);
@@ -31,17 +31,17 @@ function NewAnalysis({ hideNavbar = false }: { hideNavbar?: boolean }) {
           headers: { 'X-User-Email': user?.email || 'admin@gmail.com' }
         });
         if (res.data?.data) {
-           const d = res.data.data;
-           setDraftData(d);
-           setFormData({
-             companyName: d.company_name || '',
-             cin: d.cin || '',
-             gstin: d.gstin || '',
-             pan: d.pan || '',
-             amount: d.amount ? String(d.amount) : '',
-           });
-           setLastFilledTime(new Date(d.updated_at || d.created_at || new Date()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
-           setIsAutofilled(true);
+          const d = res.data.data;
+          setDraftData(d);
+          setFormData({
+            companyName: d.company_name || '',
+            cin: d.cin || '',
+            gstin: d.gstin || '',
+            pan: d.pan || '',
+            amount: d.amount ? String(d.amount) : '',
+          });
+          setLastFilledTime(new Date(d.updated_at || d.created_at || new Date()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
+          setIsAutofilled(true);
         }
       } catch (e) {
         console.error("Failed to fetch draft", e);
@@ -49,22 +49,22 @@ function NewAnalysis({ hideNavbar = false }: { hideNavbar?: boolean }) {
         setIsFetching(false);
       }
     };
-    
+
     // Short artificial delay to demonstrate the elegant loading state
     setTimeout(fetchLatest, 600);
   }, [user]);
 
   const handleLoadPrevious = () => {
-      if (draftData) {
-           setFormData({
-             companyName: draftData.company_name || '',
-             cin: draftData.cin || '',
-             gstin: draftData.gstin || '',
-             pan: draftData.pan || '',
-             amount: draftData.amount ? String(draftData.amount) : '',
-           });
-           setIsAutofilled(true);
-      }
+    if (draftData) {
+      setFormData({
+        companyName: draftData.company_name || '',
+        cin: draftData.cin || '',
+        gstin: draftData.gstin || '',
+        pan: draftData.pan || '',
+        amount: draftData.amount ? String(draftData.amount) : '',
+      });
+      setIsAutofilled(true);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,7 +89,7 @@ function NewAnalysis({ hideNavbar = false }: { hideNavbar?: boolean }) {
 
     setIsSubmitting(true);
     setUploadPct(0);
-    
+
     // Save data to Drafts (fire-and-forget)
     api.post('/api/analysis/save', {
       company_name: formData.companyName,
@@ -104,15 +104,15 @@ function NewAnalysis({ hideNavbar = false }: { hideNavbar?: boolean }) {
     try {
       // STEP 1: Upload files with real byte progress
       const result = await uploadCompanyDocuments({
-        company_name:  formData.companyName,
-        cin_number:    formData.cin,
-        gstin_number:  formData.gstin,
-        pan_number:    formData.pan,
-        loan_amount:   formData.amount,
+        company_name: formData.companyName,
+        cin_number: formData.cin,
+        gstin_number: formData.gstin,
+        pan_number: formData.pan,
+        loan_amount: formData.amount,
         balance_sheet: files.balanceSheet,
         bank_statement: files.bankStatements,
-        gst_filing:    files.gstFilings,
-        onProgress:    setUploadPct,
+        gst_filing: files.gstFilings,
+        onProgress: setUploadPct,
       });
 
       // STEP 2: Trigger analysis (fire-and-forget, backend processes async)
@@ -130,17 +130,17 @@ function NewAnalysis({ hideNavbar = false }: { hideNavbar?: boolean }) {
   return (
     <div className="analysis-page">
       {!hideNavbar && (
-      <nav className="navbar">
-        <div className="logo" style={{ color: '#0d3b38' }}>
-          <Triangle size={24} fill="#0d3b38" stroke="none" style={{ transform: 'rotate(180deg)' }} />
-          CreditIQ
-        </div>
-        <div className="nav-links">
-          <Link to="/" className="nav-link">Home</Link>
-          <span className="nav-separator">/</span>
-          <Link to="/new-analysis" className="nav-link active" style={{ color: '#0d3b38' }}>New Analysis</Link>
-        </div>
-      </nav>
+        <nav className="navbar">
+          <div className="logo" style={{ color: '#0d3b38' }}>
+            <Triangle size={24} fill="#0d3b38" stroke="none" style={{ transform: 'rotate(180deg)' }} />
+            CreditIQ
+          </div>
+          <div className="nav-links">
+            <Link to="/" className="nav-link">Home</Link>
+            <span className="nav-separator">/</span>
+            <Link to="/new-analysis" className="nav-link active" style={{ color: '#0d3b38' }}>New Analysis</Link>
+          </div>
+        </nav>
       )}
 
       <div className="layout-container">
@@ -150,18 +150,18 @@ function NewAnalysis({ hideNavbar = false }: { hideNavbar?: boolean }) {
           <div className="divider"></div>
 
           {isFetching && (
-              <div className="fetch-banner">
-                  <RefreshCw size={14} className="spin" /> Fetching previous analysis...
-              </div>
+            <div className="fetch-banner">
+              <RefreshCw size={14} className="spin" /> Fetching previous analysis...
+            </div>
           )}
 
           {lastFilledTime && !isFetching && (
-              <div className="autofill-banner">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                     <CheckCircle size={14} /> Auto-filled from last entry on {lastFilledTime}
-                  </div>
-                  <button type="button" onClick={handleLoadPrevious} className="btn-load-prev">Load Previous Data</button>
+            <div className="autofill-banner">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <CheckCircle size={14} /> Auto-filled from last entry on {lastFilledTime}
               </div>
+              <button type="button" onClick={handleLoadPrevious} className="btn-load-prev">Load Previous Data</button>
+            </div>
           )}
 
           <ErrorBanner message={errorMsg} onRetry={() => setErrorMsg('')} />
@@ -198,9 +198,9 @@ function NewAnalysis({ hideNavbar = false }: { hideNavbar?: boolean }) {
 
               <div className="upload-grid">
                 {([
-                  { key: 'balanceSheet', label: 'Balance Sheet', sub: 'last 12 months', Icon: CloudUpload },
-                  { key: 'bankStatements', label: 'Bank Statements', sub: 'Last 12 months', Icon: FileUp },
-                  { key: 'gstFilings', label: 'GST Filings', sub: 'Last 12 months', Icon: FileText },
+                  { key: 'balanceSheet', label: 'Balance Sheet', sub: 'last 3 year', Icon: CloudUpload },
+                  { key: 'bankStatements', label: 'Bank Statements', sub: 'Last 3 year', Icon: FileUp },
+                  { key: 'gstFilings', label: 'GST Filings', sub: 'Last 3 year', Icon: FileText },
                 ] as const).map(({ key, label, sub, Icon }) => {
                   const uploaded = !!files[key];
                   return (
@@ -317,25 +317,25 @@ function NewAnalysis({ hideNavbar = false }: { hideNavbar?: boolean }) {
                 </div>
                 <div style={{ paddingLeft: '6px', borderLeft: '2px solid rgba(0,0,0,0.06)', marginLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {feat.data.map((item, idx) => {
-                     let valColor = '#334155';
-                     if (item.color === 'green') valColor = '#059669';
-                     if (item.color === 'yellow') valColor = '#D97706';
-                     if (item.color === 'red') valColor = '#DC2626';
+                    let valColor = '#334155';
+                    if (item.color === 'green') valColor = '#059669';
+                    if (item.color === 'yellow') valColor = '#D97706';
+                    if (item.color === 'red') valColor = '#DC2626';
 
-                     return (
-                       <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', alignItems: 'flex-start', gap: '4px' }}>
-                          <span style={{ color: '#64748B', whiteSpace: 'nowrap' }}>{item.label}:</span>
-                          <span style={{ 
-                              color: valColor, 
-                              fontWeight: item.highlight ? 700 : 500,
-                              textAlign: 'right',
-                              whiteSpace: 'pre-line',
-                              lineHeight: 1.2
-                          }}>
-                              {item.value}
-                          </span>
-                       </div>
-                     );
+                    return (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', alignItems: 'flex-start', gap: '4px' }}>
+                        <span style={{ color: '#64748B', whiteSpace: 'nowrap' }}>{item.label}:</span>
+                        <span style={{
+                          color: valColor,
+                          fontWeight: item.highlight ? 700 : 500,
+                          textAlign: 'right',
+                          whiteSpace: 'pre-line',
+                          lineHeight: 1.2
+                        }}>
+                          {item.value}
+                        </span>
+                      </div>
+                    );
                   })}
                 </div>
               </div>

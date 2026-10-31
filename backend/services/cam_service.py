@@ -929,9 +929,17 @@ def _build_annexures(analysis_data: dict, dynamic_conditions: list):
     if shap_factors:
         rows = []
         for f in shap_factors:
-            impact = str(f.get("impact", ""))
-            direction = "Increases PD" if impact.strip().startswith("+") else "Reduces PD"
-            rows.append((str(f.get("name", "Unnamed factor")), impact, direction))
+            if isinstance(f, str):
+                import re
+                m = re.search(r'([+-]?\d+(?:\.\d+)?)\s*%', f)
+                impact = m.group(0) if m else "N/A"
+                name = re.sub(r'\(?[+-]?\d+(?:\.\d+)?%?\)?', '', f).strip(' :-') or f
+                direction = "Increases PD" if impact.strip().startswith("+") else ("Reduces PD" if impact.strip().startswith("-") else "Neutral")
+                rows.append((name, impact, direction))
+            elif isinstance(f, dict):
+                impact = str(f.get("impact", ""))
+                direction = "Increases PD" if impact.strip().startswith("+") else "Reduces PD"
+                rows.append((str(f.get("name", "Unnamed factor")), impact, direction))
         story.append(build_table(
             ["Factor", "Contribution", "Direction"],
             rows,
@@ -945,12 +953,15 @@ def _build_annexures(analysis_data: dict, dynamic_conditions: list):
     if fraud_signals:
         rows = []
         for s in fraud_signals:
-            rows.append((
-                str(s.get("signal_type") or s.get("description") or "Unspecified signal"),
-                str(s.get("risk_level") or "-"),
-                str(s.get("confidence_score") or "-"),
-                _fmt_money(s.get("evidence_amount")) if s.get("evidence_amount") else "Not quantified",
-            ))
+            if isinstance(s, str):
+                rows.append((s, "-", "-", "Not quantified"))
+            elif isinstance(s, dict):
+                rows.append((
+                    str(s.get("signal_type") or s.get("description") or "Unspecified signal"),
+                    str(s.get("risk_level") or "-"),
+                    str(s.get("confidence_score") or "-"),
+                    _fmt_money(s.get("evidence_amount")) if s.get("evidence_amount") else "Not quantified",
+                ))
         story.append(build_table(
             ["Signal", "Risk", "Confidence", "Evidence amount"],
             rows,
@@ -963,17 +974,20 @@ def _build_annexures(analysis_data: dict, dynamic_conditions: list):
     story.append(Paragraph("Annexure C — Adverse media screen", STYLES["h2"]))
     if news_signals:
         rows = []
-        for n in news_signals[:25]:
-            rows.append((
-                str(n.get("signal") or n.get("title") or "Untitled item"),
-                str(n.get("risk") or "-"),
-                str(n.get("date") or "-"),
-                str(n.get("source") or "-"),
-            ))
+        for n in news_signals:
+            if isinstance(n, str):
+                rows.append(("-", n, "Neutral", "-"))
+            elif isinstance(n, dict):
+                rows.append((
+                    str(n.get("date") or "-"),
+                    str(n.get("headline") or n.get("title") or "Untitled article"),
+                    str(n.get("sentiment") or "-"),
+                    str(n.get("source") or "-"),
+                ))
         story.append(build_table(
-            ["Headline", "Risk", "Date", "Source"],
+            ["Date", "Headline", "Sentiment", "Source"],
             rows,
-            [84 * mm, 18 * mm, 22 * mm, CONTENT_WIDTH - 124 * mm],
+            [24 * mm, 80 * mm, 28 * mm, CONTENT_WIDTH - 132 * mm],
         ))
     else:
         story.append(Paragraph("No adverse media items were returned for this borrower.", STYLES["body"]))

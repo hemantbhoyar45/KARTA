@@ -266,11 +266,21 @@ def ratio_benchmark_chart(financials: dict, benchmarks: dict, width_mm: float) -
 def shap_attribution_chart(shap_factors: list, width_mm: float) -> list:
     parsed = []
     for factor in shap_factors or []:
-        raw = str(factor.get("impact", "")).strip().replace("+", "")
-        try:
-            parsed.append((str(factor.get("name", "Unnamed")), float(raw)))
-        except ValueError:
-            continue
+        if isinstance(factor, str):
+            import re
+            m = re.search(r'([+-]?\d+(?:\.\d+)?)\s*%', factor)
+            raw = m.group(1) if m else "0"
+            name = re.sub(r'\(?[+-]?\d+(?:\.\d+)?%?\)?', '', factor).strip(' :-') or factor
+            try:
+                parsed.append((name, float(raw)))
+            except ValueError:
+                continue
+        elif isinstance(factor, dict):
+            raw = str(factor.get("impact", "")).strip().replace("+", "").replace("%", "")
+            try:
+                parsed.append((str(factor.get("name", "Unnamed")), float(raw)))
+            except ValueError:
+                continue
     if not parsed:
         return []
 
